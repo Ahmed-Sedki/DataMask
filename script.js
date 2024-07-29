@@ -1,3 +1,10 @@
+// Function to show selected section and hide others
+function showSection(sectionId) {
+    document.getElementById('anonymize-section').style.display = 'none';
+    document.getElementById('replace-section').style.display = 'none';
+    document.getElementById(sectionId + '-section').style.display = 'block';
+}
+
 // Function to generate a random number within a range
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -27,7 +34,7 @@ function mockHostname(original) {
     const prefixes = ['srv', 'host', 'node', 'dev', 'prod', 'test'];
     const suffixes = ['.local', '.net', '.com', '.org', '.int'];
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const randomSuffix = suffixes[Math.floor(Math.random() * prefixes.length)];
+    const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     const randomNumber = Math.floor(Math.random() * 1000);
     return `${randomPrefix}${randomNumber}${randomSuffix}`;
 }
@@ -35,12 +42,10 @@ function mockHostname(original) {
 // Function to generate a mock IPv6 address
 function mockIPv6Address(originalIPv6) {
     if (originalIPv6.startsWith('fe80::')) {
-        // For Link-local addresses, keep the 'fe80::' prefix
         return 'fe80::' + Array.from({length: 5}, () => 
             Math.floor(Math.random() * 65536).toString(16).padStart(4, '0')
         ).join(':');
     } else {
-        // For other IPv6 addresses
         return Array.from({length: 8}, () => 
             Math.floor(Math.random() * 65536).toString(16).padStart(4, '0')
         ).join(':');
@@ -49,7 +54,7 @@ function mockIPv6Address(originalIPv6) {
 
 // Main anonymization function
 function anonymize() {
-    const input = document.getElementById('input').value;
+    const input = document.getElementById('anonymize-input').value;
     let output = input;
 
     // Create maps to consistently replace values
@@ -90,19 +95,36 @@ function anonymize() {
         return hostnameMap.get(hostname);
     });
 
-    document.getElementById('output').value = output;
+    document.getElementById('anonymize-output').value = output;
+}
+
+// Function to replace specific IP
+function replaceIP() {
+    const originalIP = document.getElementById('original-ip').value;
+    const replacementIP = document.getElementById('replacement-ip').value;
+    const input = document.getElementById('replace-input').value;
+
+    if (!originalIP || !replacementIP) {
+        alert('Please enter both original and replacement IP addresses.');
+        return;
+    }
+
+    const regex = new RegExp(originalIP.replace(/\./g, '\\.'), 'g');
+    const output = input.replace(regex, replacementIP);
+
+    document.getElementById('replace-output').value = output;
 }
 
 // Function to copy text to clipboard
-function copyToClipboard() {
-    const output = document.getElementById('output');
+function copyToClipboard(elementId) {
+    const output = document.getElementById(elementId);
     output.select();
     output.setSelectionRange(0, 99999); // For mobile devices
     document.execCommand('copy');
 
-    const copyButton = document.querySelector('.copy-button');
+    const copyButton = document.querySelector(`#${elementId} + .copy-button`);
     const originalText = copyButton.innerHTML;
-    copyButton.innerHTML = '<span>&#10003;</span> Copied to clipboard';
+    copyButton.innerHTML = 'Copied!';
 
     setTimeout(() => {
         copyButton.innerHTML = originalText;
